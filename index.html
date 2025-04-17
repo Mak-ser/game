@@ -2,24 +2,27 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Noon Tea Cup</title>
+  <title>Flappy Tea Cup</title>
   <style>
     body {
       margin: 0;
       background: #70c5ce;
       overflow: hidden;
       font-family: sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
     }
     canvas {
-      display: block;
-      margin: auto;
       background: #fff;
       border: 2px solid #333;
     }
   </style>
 </head>
 <body>
-  <canvas id="gameCanvas" width="400" height="600"></canvas>
+  <canvas id="gameCanvas"></canvas>
   <script>
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
@@ -28,6 +31,11 @@
     let gameOver = false;
     let score = 0;
     let pipeSpeed = 2;  // Initial pipe speed
+    let scored = false; // To track if the score has been incremented for this pipe
+
+    // Make canvas responsive
+    canvas.width = window.innerWidth * 0.8;  // 80% of the screen width
+    canvas.height = window.innerHeight * 0.8; // 80% of the screen height
 
     // Load teacup image from the local 'images' folder
     const teaCupImg = new Image();
@@ -90,7 +98,7 @@
       for (let i = pipes.length - 1; i >= 0; i--) {
         pipes[i].x -= pipeSpeed;
 
-        // Collision
+        // Collision check
         if (
           bird.x < pipes[i].x + pipeWidth &&
           bird.x + bird.width > pipes[i].x &&
@@ -99,12 +107,15 @@
           gameOver = true;
         }
 
-        if (pipes[i].x + pipeWidth === bird.x) {
+        // Increment score only when the bird passes a pipe
+        if (pipes[i].x + pipeWidth < bird.x && !scored) {
           score++;
+          scored = true;  // Ensure score only increments once for each pipe
         }
 
         if (pipes[i].x + pipeWidth < 0) {
           pipes.splice(i, 1);
+          scored = false;  // Reset the score state when a pipe is off-screen
         }
       }
     }
@@ -141,6 +152,14 @@
       }
     });
 
+    // Mobile touch event
+    canvas.addEventListener('touchstart', function(e) {
+      e.preventDefault();  // Prevent the default touch event (scrolling, etc.)
+      if (!gameOver) {
+        bird.flap();
+      }
+    });
+
     function resetGame() {
       bird.reset();
       pipes.length = 0;
@@ -148,6 +167,7 @@
       frames = 0;
       pipeSpeed = 2;  // Reset pipe speed
       gameOver = false;
+      scored = false;  // Reset scored state
       loop();
     }
 
@@ -182,6 +202,12 @@
     teaCupImg.onload = () => {
       loop();
     };
+
+    // Handle resizing the window
+    window.addEventListener('resize', () => {
+      canvas.width = window.innerWidth * 0.8;
+      canvas.height = window.innerHeight * 0.8;
+    });
   </script>
 </body>
 </html>
