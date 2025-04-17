@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Flappy Tea Cup</title>
+  <title>Noon Tea Cup</title>
   <style>
     body {
       margin: 0;
@@ -19,13 +19,29 @@
       background: #fff;
       border: 2px solid #333;
     }
+    #restartBtn {
+      position: absolute;
+      bottom: 50px;
+      padding: 10px 20px;
+      background-color: #00cc66;
+      color: white;
+      font-size: 18px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      display: none;  /* Hidden by default */
+      z-index: 10;
+    }
   </style>
 </head>
 <body>
   <canvas id="gameCanvas"></canvas>
+  <button id="restartBtn">Restart Game</button>
+  
   <script>
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
+    const restartBtn = document.getElementById('restartBtn');
 
     let frames = 0;
     let gameOver = false;
@@ -139,16 +155,14 @@
       ctx.font = "48px Arial";
       ctx.fillText("Game Over", 80, canvas.height / 2);
       ctx.font = "20px Arial";
-      ctx.fillText("Press R to restart", 120, canvas.height / 2 + 40);
+      ctx.fillText("Tap to restart", 120, canvas.height / 2 + 40);
+      restartBtn.style.display = "block"; // Show the restart button
     }
 
     // Control events
     document.addEventListener('keydown', function(e) {
       if (e.code === "Space" && !gameOver) {
         bird.flap();
-      }
-      if (e.code === "KeyR" && gameOver) {
-        resetGame();
       }
     });
 
@@ -157,7 +171,14 @@
       e.preventDefault();  // Prevent the default touch event (scrolling, etc.)
       if (!gameOver) {
         bird.flap();
+      } else {
+        resetGame();
       }
+    });
+
+    // Restart game via button click
+    restartBtn.addEventListener('click', function() {
+      resetGame();
     });
 
     function resetGame() {
@@ -168,13 +189,14 @@
       pipeSpeed = 2;  // Reset pipe speed
       gameOver = false;
       scored = false;  // Reset scored state
+      restartBtn.style.display = "none";  // Hide the restart button
       loop();
     }
 
     function update() {
       // Increase pipe speed if score >= 3
       if (score >= 3) {
-        pipeSpeed = 6;  // Increase speed after score reaches 3
+        pipeSpeed = 4;  // Increase speed after score reaches 3
       }
 
       if (!gameOver) {
