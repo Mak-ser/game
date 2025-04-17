@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Noon Tea Cup</title>
+  <style>
+    body {
+      margin: 0;
+      background: #70c5ce;
+      overflow: hidden;
+      font-family: sans-serif;
+    }
+    canvas {
+      display: block;
+      margin: auto;
+      background: #fff;
+      border: 2px solid #333;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="gameCanvas" width="400" height="600"></canvas>
+  <script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+
+    let frames = 0;
+    let gameOver = false;
+    let score = 0;
+    let pipeSpeed = 2;  // Initial pipe speed
+
+    // Load teacup image from the local 'images' folder
+    const teaCupImg = new Image();
+    teaCupImg.src = "images/teacup.png";  // Image from your local folder
+
+    // Bird (now Tea Cup)
+    const bird = {
+      x: 50,
+      y: 150,
+      width: 40,
+      height: 40,
+      gravity: 0.25,
+      jump: 4.6,
+      speed: 0,
+      draw() {
+        ctx.drawImage(teaCupImg, this.x, this.y, this.width, this.height);
+      },
+      update() {
+        this.speed += this.gravity;
+        this.y += this.speed;
+
+        if (this.y + this.height >= canvas.height) {
+          this.y = canvas.height - this.height;
+          gameOver = true;
+        }
+
+        if (this.y <= 0) {
+          this.y = 0;
+          this.speed = 0;
+        }
+      },
+      flap() {
+        this.speed = -this.jump;
+      },
+      reset() {
+        this.y = 150;
+        this.speed = 0;
+      }
+    };
+
+    const pipes = [];
+    const pipeWidth = 60;
+    const pipeGap = 120;
+    const pipeInterval = 90;
+
+    function addPipe() {
+      const topHeight = Math.floor(Math.random() * 250) + 50;
+      pipes.push({
+        x: canvas.width,
+        top: topHeight,
+        bottom: canvas.height - topHeight - pipeGap
+      });
+    }
+
+    function updatePipes() {
+      if (frames % pipeInterval === 0) {
+        addPipe();
+      }
+
+      for (let i = pipes.length - 1; i >= 0; i--) {
+        pipes[i].x -= pipeSpeed;
+
+        // Collision
+        if (
+          bird.x < pipes[i].x + pipeWidth &&
+          bird.x + bird.width > pipes[i].x &&
+          (bird.y < pipes[i].top || bird.y + bird.height > canvas.height - pipes[i].bottom)
+        ) {
+          gameOver = true;
+        }
+
+        if (pipes[i].x + pipeWidth === bird.x) {
+          score++;
+        }
+
+        if (pipes[i].x + pipeWidth < 0) {
+          pipes.splice(i, 1);
+        }
+      }
+    }
+
+    function drawPipes() {
+      ctx.fillStyle = "#00cc66";
+      pipes.forEach(pipe => {
+        ctx.fillRect(pipe.x, 0, pipeWidth, pipe.top);
+        ctx.fillRect(pipe.x, canvas.height - pipe.bottom, pipeWidth, pipe.bottom);
+      });
+    }
+
+    function drawScore() {
+      ctx.fillStyle = "#000";
+      ctx.font = "24px Arial";
+      ctx.fillText("Score: " + score, 20, 40);
+    }
+
+    function drawGameOver() {
+      ctx.fillStyle = "red";
+      ctx.font = "48px Arial";
+      ctx.fillText("Game Over", 80, canvas.height / 2);
+      ctx.font = "20px Arial";
+      ctx.fillText("Press R to restart", 120, canvas.height / 2 + 40);
+    }
+
+    // Control events
+    document.addEventListener('keydown', function(e) {
+      if (e.code === "Space" && !gameOver) {
+        bird.flap();
+      }
+      if (e.code === "KeyR" && gameOver) {
+        resetGame();
+      }
+    });
+
+    function resetGame() {
+      bird.reset();
+      pipes.length = 0;
+      score = 0;
+      frames = 0;
+      pipeSpeed = 2;  // Reset pipe speed
+      gameOver = false;
+      loop();
+    }
+
+    function update() {
+      // Increase pipe speed if score >= 3
+      if (score >= 3) {
+        pipeSpeed = 6;  // Increase speed after score reaches 3
+      }
+
+      if (!gameOver) {
+        bird.update();
+        updatePipes();
+      }
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      bird.draw();
+      drawPipes();
+      drawScore();
+      if (gameOver) drawGameOver();
+    }
+
+    function loop() {
+      update();
+      draw();
+      frames++;
+      if (!gameOver) requestAnimationFrame(loop);
+    }
+
+    // Start game only when the teacup image has loaded
+    teaCupImg.onload = () => {
+      loop();
+    };
+  </script>
+</body>
+</html>
